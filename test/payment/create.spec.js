@@ -1,0 +1,59 @@
+const assert = require('assert')
+const proxyquire = require('proxyquire')
+const create = proxyquire('../../payment/create', {
+    'uuid/v4': () => 'mockedUUID'
+})
+
+// {
+//     id: uuid(),
+//     provider: 'stripe',
+//     providerPaymentId: stripePaymentIntent.id,
+//     providerPaymentSecret: stripePaymentIntent.client_secret,
+//     amount: stripePaymentIntent.amount,
+//     currency: stripePaymentIntent.currency,
+//     description: stripePaymentIntent.description || '',
+//     customerId,
+//     ticketId
+// }
+
+const getExpected = description => ({
+    id: 'mockedUUID',
+    provider: 'stripe',
+    providerPaymentId: 'stripeId',
+    providerPaymentSecret: 'stripeSecret',
+    amount: 12345,
+    currency: 'eur',
+    description,
+    customerId: '987633',
+    ticketId: 'ABC-123'
+})
+
+const getStripePaymentIntentsMock = description => ({
+    id: 'stripeId',
+    client_secret: 'stripeSecret',
+    amount: 12345,
+    currency: 'eur',
+    description
+})
+
+describe('create', () => {
+    it('should create payment object from inputs', () => {
+        const expected = getExpected('test')
+
+        const stripePaymentIntents = getStripePaymentIntentsMock('test')
+
+        const actual = create(stripePaymentIntents, '987633', 'ABC-123')
+
+        assert.deepEqual(actual, expected)
+    })
+
+    it('should create paymey object with empty description if not given', () => {
+        const expected = getExpected('')
+
+        const stripePaymentIntents = getStripePaymentIntentsMock(null)
+
+        const actual = create(stripePaymentIntents, '987633', 'ABC-123')
+
+        assert.deepEqual(actual, expected)
+    })
+})
