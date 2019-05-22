@@ -4,18 +4,6 @@ const create = proxyquire('../../payment/create', {
     'uuid/v4': () => 'mockedUUID'
 })
 
-// {
-//     id: uuid(),
-//     provider: 'stripe',
-//     providerPaymentId: stripePaymentIntent.id,
-//     providerPaymentSecret: stripePaymentIntent.client_secret,
-//     amount: stripePaymentIntent.amount,
-//     currency: stripePaymentIntent.currency,
-//     description: stripePaymentIntent.description || '',
-//     customerId,
-//     ticketId
-// }
-
 const getExpected = description => ({
     id: 'mockedUUID',
     provider: 'stripe',

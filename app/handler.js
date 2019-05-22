@@ -2,7 +2,8 @@
 const {
     GET_PACKAGES_ENDPOINT,
     STRIPE_SECRET_KEY_SSM_NAME,
-    STRIPE_PUBLIC_KEY_SSM_NAME
+    STRIPE_PUBLIC_KEY_SSM_NAME,
+    DYNAMODB_TABLE
 } = process.env
 const Sentry = require('@sentry/node')
 const {
@@ -11,8 +12,7 @@ const {
     logException,
     validateRequestParams,
     getHeaderFromApiGatewayEvent,
-    handleBackendException,
-    getSSMParameterValue
+    handleBackendException
 } = require('@mineko-io/lambda-basics')
 
 const paymentModule = require('../payment')
@@ -71,7 +71,11 @@ module.exports = async event => {
         return createStripePaymentIntent(packages)
             // @TODO: Store as well in database
             .then(({ stripePaymentIntent, stripePublicId }) => paymentModule.create(stripePaymentIntent, stripePublicId, params.customerId, params.ticketId))
-            .then(payments => getResponseObject(201, headers, { payments }))
+            .then(async payment => {
+                const storeRes = await paymentModule.store(DYNAMODB_TABLE, payment)
+                console.log(storeRes)
+                return getResponseObject(201, headers, { payments: payment })
+            })
 
     } catch (err) {
         logException(err)
