@@ -1,4 +1,5 @@
 const assert = require('assert')
+const sinon = require('sinon')
 const proxyquire = require('proxyquire')
 
 const docClientMock = class DocumentClient {
@@ -16,12 +17,25 @@ const store = proxyquire('../../payment/store', {
 })
 
 describe('store', () => {
+
+    before(() => {
+        this.clock = sinon.useFakeTimers()
+    })
+
+    after(() => {
+        this.clock.restore()
+    })
+
     it('should store given object', async () => {
         const item = { id: 'paymentId', attribute: 'value' }
         const tableName = 'table'
         const expected = {
             TableName: tableName,
-            Item: item
+            Item: {
+                ...item,
+                created: '1970-01-01T00:00:00.000Z',
+                updated: '1970-01-01T00:00:00.000Z'
+            }
         }
 
         const actual = await store(tableName, item)
@@ -34,7 +48,12 @@ describe('store', () => {
         const tableName = 'table'
         const expected = {
             TableName: tableName,
-            Item: { id: 'paymentId', attribute: 'value' }
+            Item: {
+                id: 'paymentId',
+                attribute: 'value',
+                created: '1970-01-01T00:00:00.000Z',
+                updated: '1970-01-01T00:00:00.000Z'
+            }
         }
 
         const actual = await store(tableName, item)
