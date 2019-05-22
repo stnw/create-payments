@@ -21,6 +21,7 @@ const getExpected = description => ({
     provider: 'stripe',
     providerPaymentId: 'stripeId',
     providerPaymentSecret: 'stripeSecret',
+    providerPublicId: 'publicId',
     amount: 12345,
     currency: 'eur',
     description,
@@ -42,7 +43,7 @@ describe('create', () => {
 
         const stripePaymentIntents = getStripePaymentIntentsMock('test')
 
-        const actual = create(stripePaymentIntents, '987633', 'ABC-123')
+        const actual = create(stripePaymentIntents, 'publicId', '987633', 'ABC-123')
 
         assert.deepEqual(actual, expected)
     })
@@ -52,7 +53,7 @@ describe('create', () => {
 
         const stripePaymentIntents = getStripePaymentIntentsMock(null)
 
-        const actual = create(stripePaymentIntents, '987633', 'ABC-123')
+        const actual = create(stripePaymentIntents, 'publicId', '987633', 'ABC-123')
 
         assert.deepEqual(actual, expected)
     })

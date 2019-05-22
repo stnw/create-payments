@@ -1,8 +1,9 @@
 const uuid = require('uuid/v4')
 
-const create = (stripePaymentIntent, customerId, ticketId) => ({
+const create = (stripePaymentIntent, stripePublicId, customerId, ticketId) => ({
     id: uuid(),
     provider: 'stripe',
+    providerPublicId: stripePublicId,
     providerPaymentId: stripePaymentIntent.id,
     providerPaymentSecret: stripePaymentIntent.client_secret,
     amount: stripePaymentIntent.amount,

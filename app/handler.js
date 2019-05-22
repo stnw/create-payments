@@ -11,7 +11,8 @@ const {
     logException,
     validateRequestParams,
     getHeaderFromApiGatewayEvent,
-    handleBackendException
+    handleBackendException,
+    getSSMParameterValue
 } = require('@mineko-io/lambda-basics')
 
 const paymentModule = require('../payment')
@@ -22,11 +23,14 @@ const requiredParams = ['customerId', 'packages', 'ticketId']
 
 const createStripePaymentIntent = packages =>
     stripeModule.paymentIntents
-        .init(STRIPE_SECRET_KEY_SSM_NAME)
-        .then(paymentIntents => paymentIntents.create({
-            currency: 'eur',
-            amount: stripeModule.finance.convertToCent(packagesModule.getGrossTotal(packages)),
-            description: packagesModule.flattenDescription(packages)
+        .init(STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
+        .then(async ({ paymentIntents, stripePublicId }) => ({
+            stripePaymentIntent: await paymentIntents.create({
+                currency: 'eur',
+                amount: stripeModule.finance.convertToCent(packagesModule.getGrossTotal(packages)),
+                description: packagesModule.flattenDescription(packages)
+            }),
+            stripePublicId
         }))
 
 module.exports = async event => {
@@ -66,7 +70,7 @@ module.exports = async event => {
 
         return createStripePaymentIntent(packages)
             // @TODO: Store as well in database
-            .then(stripePaymentIntent => paymentModule.create(stripePaymentIntent, params.customerId, params.ticketId))
+            .then(({ stripePaymentIntent, stripePublicId }) => paymentModule.create(stripePaymentIntent, stripePublicId, params.customerId, params.ticketId))
             .then(payments => getResponseObject(201, headers, { payments }))
 
     } catch (err) {
