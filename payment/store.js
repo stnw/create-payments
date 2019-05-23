@@ -3,17 +3,12 @@ const docClient = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true })
 
 const blacklistSecrets = ({ providerPaymentSecret, ...item }) => item
 
-const setUpdated = item => ({
+const prepareItem = item => blacklistSecrets({
     ...item,
-    updated: new Date().toISOString()
+    created: new Date().toISOString(),
+    updated: new Date().toISOString(),
+    success: false
 })
-
-const setCreated = item => ({
-    ...item,
-    created: new Date().toISOString()
-})
-
-const prepareItem = item => blacklistSecrets(setUpdated(setCreated(item)))
 
 const store = (TableName, Item) => new Promise((resolve, reject) => {
     docClient.put(

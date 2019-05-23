@@ -34,7 +34,8 @@ describe('store', () => {
             Item: {
                 ...item,
                 created: '1970-01-01T00:00:00.000Z',
-                updated: '1970-01-01T00:00:00.000Z'
+                updated: '1970-01-01T00:00:00.000Z',
+                success: false
             }
         }
 
@@ -52,7 +53,8 @@ describe('store', () => {
                 id: 'paymentId',
                 attribute: 'value',
                 created: '1970-01-01T00:00:00.000Z',
-                updated: '1970-01-01T00:00:00.000Z'
+                updated: '1970-01-01T00:00:00.000Z',
+                success: false
             }
         }
 
