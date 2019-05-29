@@ -19,7 +19,7 @@ const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const packagesModule = require('../packages')
 
-const requiredParams = ['customerId', 'packages', 'ticketId']
+const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod', 'flow']
 
 const createStripePaymentIntent = packages =>
     stripeModule.paymentIntents
