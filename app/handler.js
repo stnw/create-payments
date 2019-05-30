@@ -108,7 +108,7 @@ module.exports = async event => {
             return getResponseObject(
                 400,
                 headers,
-                getErrorResponseBody(`Some Package(s) not supported for you partner`, 'Validation')
+                getErrorResponseBody(`Some Package(s) not supported for you partner or total price of all packages is 0`, 'Validation')
             )
         }
 
