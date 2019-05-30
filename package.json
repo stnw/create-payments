@@ -10,10 +10,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@mineko-io/lambda-basics": "^1.0.7",
+    "@mineko-io/lambda-basics": "^1.0.8",
     "@sentry/node": "^5.2.0",
     "aws-sdk": "^2.457.0",
     "axios": "^0.18.0",
+    "qs": "^6.7.0",
     "stripe": "^7.0.0",
     "uuid": "^3.3.2"
   },

@@ -4,8 +4,9 @@ const {
     STRIPE_SECRET_KEY_SSM_NAME,
     STRIPE_PUBLIC_KEY_SSM_NAME,
     DYNAMODB_TABLE,
-    USERFLOW_URL,
-    UPLOADER_URL
+    PAYPAL_CLIENT_ID_SSM_NAME,
+    PAYPAL_CLIENT_SECRET_SSM_NAME,
+    APP_ENVIRONMENT
 } = process.env
 const Sentry = require('@sentry/node')
 const {
@@ -19,6 +20,7 @@ const {
 
 const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
+const paypalModule = require('../paypal')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
 
@@ -26,14 +28,33 @@ const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod']
 
 const createStripePaymentIntent = paymentMethod => packages =>
     stripeModule.paymentIntents
-        .create(paymentMethod, packages, STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
+        .create(
+            paymentMethod,
+            packages,
+            STRIPE_SECRET_KEY_SSM_NAME,
+            STRIPE_PUBLIC_KEY_SSM_NAME
+        )
 
 const createStripeSource = paymentMethod => (packages, returnUrl) =>
     stripeModule.source
-        .create(paymentMethod, packages, returnUrlModule.create(returnUrl), STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
+        .create(
+            paymentMethod,
+            packages,
+            returnUrlModule.create(returnUrl, paymentMethod),
+            STRIPE_SECRET_KEY_SSM_NAME,
+            STRIPE_PUBLIC_KEY_SSM_NAME
+        )
 
-const createPaypalOrder = paymentMethod => (packages, returnUrl) => { }
-
+const createPaypalOrder = paymentMethod => (packages, returnUrl) =>
+    paypalModule.order
+        .create(
+            paymentMethod,
+            packages,
+            returnUrlModule.create(returnUrl, paymentMethod),
+            PAYPAL_CLIENT_ID_SSM_NAME,
+            PAYPAL_CLIENT_SECRET_SSM_NAME,
+            APP_ENVIRONMENT
+        )
 
 const createResponseData = (providerPaymentIntent, payment) => {
     let data = {

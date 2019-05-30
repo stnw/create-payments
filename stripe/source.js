@@ -1,7 +1,6 @@
 const initStripe = require('./init')
 const finance = require('./finance')
 const packagesModule = require('../packages')
-const returnUrlModule = require('../returnUrl')
 
 const sourceSettingsMap = ({ successReturnUrl }) => ({
     'sofort': {
