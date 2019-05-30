@@ -1,7 +1,7 @@
-const finance = require('./finance')
 const paymentIntents = require('./paymentIntents')
+const source = require('./source')
 
 module.exports = {
-    finance,
+    source,
     paymentIntents
 }

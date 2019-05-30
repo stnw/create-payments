@@ -3,7 +3,9 @@ const {
     GET_PACKAGES_ENDPOINT,
     STRIPE_SECRET_KEY_SSM_NAME,
     STRIPE_PUBLIC_KEY_SSM_NAME,
-    DYNAMODB_TABLE
+    DYNAMODB_TABLE,
+    USERFLOW_URL,
+    UPLOADER_URL
 } = process.env
 const Sentry = require('@sentry/node')
 const {
@@ -18,20 +20,41 @@ const {
 const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const packagesModule = require('../packages')
+const returnUrlModule = require('../returnUrl')
 
-const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod', 'flow']
+const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod']
 
-const createStripePaymentIntent = packages =>
+const createStripePaymentIntent = paymentMethod => packages =>
     stripeModule.paymentIntents
-        .init(STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
-        .then(async ({ paymentIntents, stripePublicId }) => ({
-            stripePaymentIntent: await paymentIntents.create({
-                currency: 'eur',
-                amount: stripeModule.finance.convertToCent(packagesModule.getGrossTotal(packages)),
-                description: packagesModule.flattenDescription(packages)
-            }),
-            stripePublicId
-        }))
+        .create(paymentMethod, packages, STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
+
+const createStripeSource = paymentMethod => (packages, returnUrl) =>
+    stripeModule.source
+        .create(paymentMethod, packages, returnUrlModule.create(returnUrl), STRIPE_SECRET_KEY_SSM_NAME, STRIPE_PUBLIC_KEY_SSM_NAME)
+
+const createPaypalOrder = paymentMethod => (packages, returnUrl) => { }
+
+
+const createResponseData = (providerPaymentIntent, payment) => {
+    let data = {
+        payment
+    }
+
+    if (providerPaymentIntent.redirectUrl)
+        data.links = [{
+            href: providerPaymentIntent.redirectUrl,
+            rel: 'approve',
+            type: 'GET'
+        }]
+
+    return data
+}
+
+const paymentMethodHandlerMap = {
+    'creditcard': createStripePaymentIntent('creditcard'),
+    'paypal': createPaypalOrder('paypal'),
+    'sofort': createStripeSource('sofort')
+}
 
 module.exports = async event => {
     let headers = {}
@@ -68,14 +91,13 @@ module.exports = async event => {
             )
         }
 
-        return createStripePaymentIntent(packages)
-            // @TODO: Store as well in database
-            .then(({ stripePaymentIntent, stripePublicId }) => paymentModule.create(stripePaymentIntent, stripePublicId, params.customerId, params.ticketId))
-            .then(async payment => {
-                const storeRes = await paymentModule.store(DYNAMODB_TABLE, payment)
-                console.log(storeRes)
-                return getResponseObject(201, headers, { payments: payment })
-            })
+        const paymentMethodHandler = paymentMethodHandlerMap[params.paymentMethod]
+
+        const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl)
+        const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
+
+        return paymentModule.store(DYNAMODB_TABLE, payment)
+            .then(storeResult => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
 
     } catch (err) {
         logException(err)
