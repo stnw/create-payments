@@ -122,7 +122,7 @@ module.exports = async event => {
 
     } catch (err) {
         logException(err)
-        return getResponseObject(500, headers, getErrorResponseBody('Unexpected error occurred', 'Internal'))
+        return getResponseObject(500, headers, getErrorResponseBody('Unexpected error occurred: ' + err.message, 'Internal'))
     } finally {
         await Sentry.flush(2000)
     }

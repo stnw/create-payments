@@ -7,11 +7,16 @@ const setSearchParamToUrl = (urlString, key, value) => {
 }
 
 const create = (returnUrl, paymentMethod) => {
-    const preReturnUrl = setSearchParamToUrl(returnUrl, 'payment_method', paymentMethod)
-    return {
-        successReturnUrl: setSearchParamToUrl(preReturnUrl, 'success', true),
-        errorReturnUrl: setSearchParamToUrl(preReturnUrl, 'success', false)
+    try {
+        const preReturnUrl = setSearchParamToUrl(returnUrl, 'payment_method', paymentMethod)
+        return {
+            successReturnUrl: setSearchParamToUrl(preReturnUrl, 'success', true),
+            errorReturnUrl: setSearchParamToUrl(preReturnUrl, 'success', false)
+        }
+    } catch (err) {
+        throw new Error('returnUrl invalid')
     }
+
 }
 
 module.exports = create
