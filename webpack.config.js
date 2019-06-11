@@ -8,5 +8,5 @@ module.exports = {
       libraryTarget: 'commonjs'
     },
     target: 'node',
-    mode: 'development'
+    mode: 'production'
 }
