@@ -6,6 +6,7 @@ const {
     DYNAMODB_TABLE,
     PAYPAL_CLIENT_ID_SSM_NAME,
     PAYPAL_CLIENT_SECRET_SSM_NAME,
+    PAYPAL_MIDDLEWARE_URL,
     APP_ENVIRONMENT
 } = process.env
 const Sentry = require('@sentry/node')
@@ -45,12 +46,15 @@ const createStripeSource = paymentMethod => (packages, returnUrl) =>
             STRIPE_PUBLIC_KEY_SSM_NAME
         )
 
-const createPaypalOrder = paymentMethod => (packages, returnUrl) =>
+const createPaypalOrder = paymentMethod => (packages, clientReturnUrl) =>
     paypalModule.order
         .create(
             paymentMethod,
             packages,
-            returnUrlModule.create(returnUrl, paymentMethod),
+            returnUrlModule.create(
+                paypalModule.returnUrl(clientReturnUrl, PAYPAL_MIDDLEWARE_URL),
+                paymentMethod
+            ),
             PAYPAL_CLIENT_ID_SSM_NAME,
             PAYPAL_CLIENT_SECRET_SSM_NAME,
             APP_ENVIRONMENT
