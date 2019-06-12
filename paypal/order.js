@@ -1,6 +1,7 @@
 const axios = require('axios')
 const initPaypal = require('./init')
 const packagesModule = require('../packages')
+const finance = require('../utils/finance')
 
 const ORDER_ENDPOINT = '/v2/checkout/orders'
 
@@ -57,7 +58,7 @@ const create = async (paymentMethod, packages, returnUrls, clientIdParameterName
 
             return {
                 id: order.id,
-                amount,
+                amount: finance.convertToCent(amount),
                 currency,
                 redirectUrl: getApproveLink(order),
                 paymentMethod,

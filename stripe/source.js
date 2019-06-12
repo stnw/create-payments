@@ -1,5 +1,5 @@
 const initStripe = require('./init')
-const finance = require('./finance')
+const finance = require('../utils/finance')
 const packagesModule = require('../packages')
 
 const sourceSettingsMap = ({ successReturnUrl }) => ({
