@@ -14,6 +14,7 @@ const {
     getResponseObject,
     getErrorResponseBody,
     logException,
+    log,
     validateRequestParams,
     getHeaderFromApiGatewayEvent,
     handleBackendException
@@ -119,7 +120,10 @@ module.exports = async event => {
         const paymentMethodHandler = paymentMethodHandlerMap[params.paymentMethod]
 
         const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl)
+        log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
+
         const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
+        log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
             .then(storeResult => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
