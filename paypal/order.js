@@ -15,14 +15,15 @@ const ORDER_ENDPOINT = '/v2/checkout/orders'
 //     }
 //   ]
 
-const getOrderData = (amount, currency, returnUrls) => ({
+const getOrderData = (amount, currency, description, returnUrls) => ({
     intent: 'CAPTURE',
     purchase_units: [
         {
             amount: {
                 currency_code: currency,
                 value: amount
-            }
+            },
+            description
         }
     ],
     application_context: {
@@ -45,7 +46,7 @@ const createOrder = ({ apiUrl, accessToken, data }) => axios
     )
     .then(res => res.data)
 
-const create = async (paymentMethod, packages, returnUrls, clientIdParameterName, clientSecretParameterName, env) =>
+const create = async (paymentMethod, packages, ticketId, returnUrls, clientIdParameterName, clientSecretParameterName, env) =>
     initPaypal(clientIdParameterName, clientSecretParameterName, env)
         .then(async paypal => {
             const amount = packagesModule.getGrossTotal(packages)
@@ -53,7 +54,7 @@ const create = async (paymentMethod, packages, returnUrls, clientIdParameterName
 
             const order = await createOrder({
                 ...paypal,
-                data: getOrderData(amount, currency, returnUrls)
+                data: getOrderData(amount, currency, ticketId, returnUrls)
             })
 
             return {

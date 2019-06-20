@@ -9,13 +9,21 @@ const init = (secretParameterName, publicParameterName) =>
             stripePublicId
         }))
 
-const create = async (paymentMethod, packages, secretParameterName, publicParameterName) =>
+const getDescription = (ticketId, packages) => {
+    let description = ticketId
+    const packageDescription = packagesModule.flattenDescription(packages)
+    if (packageDescription.length > 0)
+        description += ` / ${packageDescription}`
+    return description
+}
+
+const create = async (paymentMethod, packages, ticketId, secretParameterName, publicParameterName) =>
     init(secretParameterName, publicParameterName)
         .then(async ({ paymentIntents, stripePublicId }) => ({
             stripePaymentIntent: await paymentIntents.create({
                 currency: 'eur',
                 amount: finance.convertToCent(packagesModule.getGrossTotal(packages)),
-                description: packagesModule.flattenDescription(packages)
+                description: getDescription(ticketId, packages)
             }),
             stripePublicId
         }))

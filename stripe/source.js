@@ -13,7 +13,7 @@ const sourceSettingsMap = ({ successReturnUrl }) => ({
     }
 })
 
-const create = async (paymentMethod, packages, returnUrls, secretParameterName, publicParameterName) =>
+const create = async (paymentMethod, packages, ticketId, returnUrls, secretParameterName, publicParameterName) =>
     initStripe(secretParameterName, publicParameterName)
         .then(async ({ stripe, stripePublicId }) => ({
             stripePublicId,
@@ -24,6 +24,7 @@ const create = async (paymentMethod, packages, returnUrls, secretParameterName, 
                             type: paymentMethod,
                             amount: finance.convertToCent(packagesModule.getGrossTotal(packages)),
                             currency: 'eur',
+                            statement_descriptor: ticketId,
                             ...sourceSettingsMap(returnUrls)[paymentMethod]
                         },
                         (err, source) => err ? rej(err) : res(source)

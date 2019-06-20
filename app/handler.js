@@ -28,30 +28,33 @@ const returnUrlModule = require('../returnUrl')
 
 const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod']
 
-const createStripePaymentIntent = paymentMethod => packages =>
+const createStripePaymentIntent = paymentMethod => (packages, returnUrl, ticketId) =>
     stripeModule.paymentIntents
         .create(
             paymentMethod,
             packages,
+            ticketId,
             STRIPE_SECRET_KEY_SSM_NAME,
             STRIPE_PUBLIC_KEY_SSM_NAME
         )
 
-const createStripeSource = paymentMethod => (packages, returnUrl) =>
+const createStripeSource = paymentMethod => (packages, returnUrl, ticketId) =>
     stripeModule.source
         .create(
             paymentMethod,
             packages,
+            ticketId,
             returnUrlModule.create(returnUrl, paymentMethod),
             STRIPE_SECRET_KEY_SSM_NAME,
             STRIPE_PUBLIC_KEY_SSM_NAME
         )
 
-const createPaypalOrder = paymentMethod => (packages, clientReturnUrl) =>
+const createPaypalOrder = paymentMethod => (packages, clientReturnUrl, ticketId) =>
     paypalModule.order
         .create(
             paymentMethod,
             packages,
+            ticketId,
             returnUrlModule.create(
                 paypalModule.returnUrl(clientReturnUrl, PAYPAL_MIDDLEWARE_URL),
                 paymentMethod
@@ -107,7 +110,7 @@ module.exports = async event => {
             return handleBackendException(err)
         }
 
-        const packages = packagesModule.mapPackageIds(availablePackages, params.packages)
+        const packages = packagesModule.mapPackageIds(availablePackages, params.packages, params.ticketId)
 
         if (!packagesModule.validate(packages, params.packages)) {
             return getResponseObject(
@@ -119,10 +122,10 @@ module.exports = async event => {
 
         const paymentMethodHandler = paymentMethodHandlerMap[params.paymentMethod]
 
-        const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl)
+        const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl, params.ticketId)
         log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
 
-        const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
+        const payment = await paymentModule.create(providerPaymentIntent, params.customerId)
         log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
