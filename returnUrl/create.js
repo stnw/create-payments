@@ -10,7 +10,7 @@ const create = (returnUrl, paymentMethod) => {
             errorReturnUrl: setSearchParamToUrl(preReturnUrl, 'success', false)
         }
     } catch (err) {
-        throw new Error('returnUrl invalid')
+        throw new Error(`returnUrl '${returnUrl}' invalid: ` + JSON.stringify(err))
     }
 
 }
