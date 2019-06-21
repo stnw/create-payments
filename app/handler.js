@@ -110,7 +110,7 @@ module.exports = async event => {
             return handleBackendException(err)
         }
 
-        const packages = packagesModule.mapPackageIds(availablePackages, params.packages, params.ticketId)
+        const packages = packagesModule.mapPackageIds(availablePackages, params.packages)
 
         if (!packagesModule.validate(packages, params.packages)) {
             return getResponseObject(
@@ -125,7 +125,7 @@ module.exports = async event => {
         const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl, params.ticketId)
         log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
 
-        const payment = await paymentModule.create(providerPaymentIntent, params.customerId)
+        const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
         log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
