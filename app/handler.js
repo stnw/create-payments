@@ -82,6 +82,7 @@ const createResponseData = (providerPaymentIntent, payment) => {
 const paymentMethodHandlerMap = {
     'creditcard': createStripePaymentIntent('creditcard'),
     'paypal': createPaypalOrder('paypal'),
+    'sepa': createStripeSource('sepa_debit'),
     'sofort': createStripeSource('sofort')
 }
 
