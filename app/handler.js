@@ -7,7 +7,8 @@ const {
     PAYPAL_CLIENT_ID_SSM_NAME,
     PAYPAL_CLIENT_SECRET_SSM_NAME,
     PAYPAL_MIDDLEWARE_URL,
-    APP_ENVIRONMENT
+    APP_ENVIRONMENT,
+    SNS_TOPIC_ARN
 } = process.env
 const Sentry = require('@sentry/node')
 const {
@@ -25,6 +26,7 @@ const stripeModule = require('../stripe')
 const paypalModule = require('../paypal')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
+const snsModule = require('../sns')
 
 const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod']
 
@@ -130,7 +132,8 @@ module.exports = async event => {
         log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
-            .then(storeResult => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
+            .then(() => snsModule.publish(SNS_TOPIC_ARN, payment))
+            .then(() => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
 
     } catch (err) {
         logException(err)
