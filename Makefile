@@ -11,10 +11,10 @@ create-deploy-package:
 	rm -Rf ./dist/deploy.zip
 	zip -r ./dist/deploy.zip -j ./dist/index.js
 
-staging-deploy:
+staging-deploy: build create-deploy-package
 	$(MAKE) PROFILE=mineko_staging deploy
 
-prod-deploy:
+prod-deploy: build create-deploy-package
 	$(MAKE) PROFILE=mineko deploy
 
 deploy: 
