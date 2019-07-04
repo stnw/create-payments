@@ -132,7 +132,10 @@ module.exports = async event => {
         log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
-            .then(() => snsModule.publish(SNS_TOPIC_ARN, payment))
+            .then(async () => {
+                const data = await snsModule.publish(SNS_TOPIC_ARN, payment)
+                log(`Published created payment to SNS: TicketId: ${payment.ticketId} / PaymentId: ${payment.id}`)
+            })
             .then(() => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
 
     } catch (err) {
