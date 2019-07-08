@@ -30,7 +30,7 @@ const snsModule = require('../sns')
 
 const requiredParams = ['customerId', 'packages', 'ticketId', 'paymentMethod']
 
-const createStripePaymentIntent = paymentMethod => (packages, returnUrl, ticketId) =>
+const createStripePaymentIntent = paymentMethod => (packages, returnUrl, ticketId, providerPaymentId) =>
     stripeModule.paymentIntents
         .create(
             paymentMethod,
@@ -40,18 +40,19 @@ const createStripePaymentIntent = paymentMethod => (packages, returnUrl, ticketI
             STRIPE_PUBLIC_KEY_SSM_NAME
         )
 
-const createStripeSource = paymentMethod => (packages, returnUrl, ticketId) =>
+const createStripeSource = paymentMethod => (packages, returnUrl, ticketId, providerPaymentId) =>
     stripeModule.source
         .create(
             paymentMethod,
             packages,
             ticketId,
+            providerPaymentId,
             returnUrlModule.create(returnUrl, paymentMethod),
             STRIPE_SECRET_KEY_SSM_NAME,
             STRIPE_PUBLIC_KEY_SSM_NAME
         )
 
-const createPaypalOrder = paymentMethod => (packages, clientReturnUrl, ticketId) =>
+const createPaypalOrder = paymentMethod => (packages, clientReturnUrl, ticketId, providerPaymentId) =>
     paypalModule.order
         .create(
             paymentMethod,
@@ -125,7 +126,7 @@ module.exports = async event => {
 
         const paymentMethodHandler = paymentMethodHandlerMap[params.paymentMethod]
 
-        const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl, params.ticketId)
+        const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl, params.ticketId, params.providerPaymentId)
         log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
 
         const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
