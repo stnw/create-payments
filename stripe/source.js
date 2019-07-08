@@ -29,12 +29,12 @@ const createStripeSource = (stripeSourceData, stripe) => new Promise(
         )
 )
 
-const hasClientCreatedSource = paymentProviderId => paymentProviderId && paymentProviderId.length > 0
+const hasClientCreatedSource = providerPaymentId => providerPaymentId && providerPaymentId.length > 0
 
 const getSource = (paymentMethod, packages, ticketId, returnUrls, stripe, providerPaymentId) => {
     const stripeSourceData = createStripeSourceData(paymentMethod, packages, ticketId, returnUrls)
 
-    if (hasClientCreatedSource(paymentProviderId)) {
+    if (hasClientCreatedSource(providerPaymentId)) {
         return ({ ...stripeSourceData, id: providerPaymentId })
     }
     return createStripeSource(stripeSourceData, stripe)
