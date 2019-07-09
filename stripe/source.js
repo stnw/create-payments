@@ -18,6 +18,9 @@ const createStripeSourceData = (paymentMethod, packages, ticketId, returnUrls) =
     amount: finance.convertToCent(packagesModule.getGrossTotal(packages)),
     currency: 'eur',
     statement_descriptor: ticketId,
+    metadata: {
+        ticketId
+    },
     ...sourceSettingsMap(returnUrls)[paymentMethod] || {}
 })
 
