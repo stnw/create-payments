@@ -14,6 +14,4 @@ const create = async (paymentMethod, packages) =>
     }
 }
 
-module.exports = {
-    create
-}
+module.exports = create
