@@ -66,8 +66,7 @@ const createPaypalOrder = paymentMethod => (packages, clientReturnUrl, ticketId)
         )
 
 const createInvoiceOrder = paymentMethod => packages =>
-    invoiceModule.order
-        .create(
+    invoiceModule.create(
             paymentMethod,
             packages
         )
