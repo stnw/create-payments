@@ -23,7 +23,7 @@ const {
 const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const paypalModule = require('../paypal')
-const invoiceModule = require('../invoice/create')
+const invoiceModule = require('../invoice')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
 
