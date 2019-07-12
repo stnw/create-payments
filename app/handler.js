@@ -24,6 +24,7 @@ const {
 const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const paypalModule = require('../paypal')
+const invoiceModule = require('../invoice')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
 const snsModule = require('../sns')
@@ -67,6 +68,12 @@ const createPaypalOrder = paymentMethod => (packages, clientReturnUrl, ticketId,
             APP_ENVIRONMENT
         )
 
+const createInvoiceOrder = paymentMethod => packages =>
+    invoiceModule.create(
+            paymentMethod,
+            packages
+        )
+
 const createResponseData = (providerPaymentIntent, payment) => {
     let data = {
         payment
@@ -86,7 +93,8 @@ const paymentMethodHandlerMap = {
     'creditcard': createStripePaymentIntent('creditcard'),
     'paypal': createPaypalOrder('paypal'),
     'sepa': createStripeSource('sepa_debit'),
-    'sofort': createStripeSource('sofort')
+    'sofort': createStripeSource('sofort'),
+    'invoice': createInvoiceOrder('invoice'),
 }
 
 module.exports = async event => {
