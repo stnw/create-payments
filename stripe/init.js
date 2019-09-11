@@ -1,10 +1,10 @@
 const Stripe = require('stripe')
-const { getSSMParameterValue } = require('@mineko-io/lambda-basics')
+const { SSMParameterInstance } = require('@mineko/lambda-core')
 
 const init = async (secretParameterName, publicParameterName) => {
-    const stripe = getSSMParameterValue(secretParameterName)
+    const stripe = SSMParameterInstance.getValue(secretParameterName)
         .then(Stripe)
-    const stripePublicId = getSSMParameterValue(publicParameterName)
+    const stripePublicId = SSMParameterInstance.getValue(publicParameterName)
 
     return {
         stripe: await stripe,

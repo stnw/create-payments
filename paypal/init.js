@@ -1,4 +1,4 @@
-const { getSSMParameterValue, requestOAuth2AccessToken } = require('@mineko-io/lambda-basics')
+const { SSMParameterInstance, OAuthInstance } = require('@mineko/lambda-core')
 
 const API_URLS = {
     'staging': 'https://api.sandbox.paypal.com',
@@ -9,8 +9,8 @@ const OAUTH_ENDPOINT = '/v1/oauth2/token'
 
 
 const getSSMParameterValues = async (clientIdParameterName, clientSecretParameterName) => {
-    const clientId = getSSMParameterValue(clientIdParameterName)
-    const clientSecret = getSSMParameterValue(clientSecretParameterName)
+    const clientId = SSMParameterInstance.getValue(clientIdParameterName)
+    const clientSecret = SSMParameterInstance.getValue(clientSecretParameterName)
 
     return {
         clientId: await clientId,
@@ -22,8 +22,8 @@ const init = async (clientIdParameterName, clientSecretParameterName, env) => {
     const apiUrl = API_URLS[env]
 
     return getSSMParameterValues(clientIdParameterName, clientSecretParameterName)
-        .then(({ clientId, clientSecret }) => requestOAuth2AccessToken(`${apiUrl}${OAUTH_ENDPOINT}`, clientId, clientSecret))
-        .then(res => res.data['access_token'])
+        .then(({ clientId, clientSecret }) => OAuthInstance.getAccessToken(`${apiUrl}${OAUTH_ENDPOINT}`, clientId, clientSecret))
+        .then(data => data['access_token'])
         .then(accessToken => ({
             accessToken,
             apiUrl

@@ -10,16 +10,13 @@ const {
     APP_ENVIRONMENT,
     SNS_TOPIC_ARN
 } = process.env
-const Sentry = require('@sentry/node')
-const {
-    getResponseObject,
-    getErrorResponseBody,
-    logException,
-    log,
-    validateRequestParams,
-    getHeaderFromApiGatewayEvent,
-    handleBackendException
-} = require('@mineko-io/lambda-basics')
+const { 
+    RuntimeInstance,
+    ResponseHandlerInstance,
+    ApiGatewayHeaderInstance,
+    ValidateInstance,
+    LoggerInstance
+} = require('@mineko/lambda-core')
 
 const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
@@ -97,60 +94,61 @@ const paymentMethodHandlerMap = {
     'invoice': createInvoiceOrder('invoice'),
 }
 
-module.exports = async event => {
+const handler = async event => {
     let headers = {}
     try {
         const body = event.body
         if (!body)
-            return getResponseObject(400, headers, getErrorResponseBody('Request body is missing', 'Validation'))
+            return ResponseHandlerInstance.getResponseObject(400, headers, ResponseHandlerInstance.getErrorResponseBody('Request body is missing', 'Validation'))
 
         const params = JSON.parse(body)
 
-        const validatedParams = validateRequestParams(requiredParams)(params)
+        const validatedParams = ValidateInstance.requestParams(requiredParams)(params)
         if (validatedParams.length > 0) {
-            return getResponseObject(
+            return ResponseHandlerInstance.getResponseObject(
                 400,
                 headers,
-                getErrorResponseBody(`Required request parameters missing in application/json body: ${validatedParams.join(',')}`, 'Validation')
+                ResponseHandlerInstance.getErrorResponseBody(`Required request parameters missing in application/json body: ${validatedParams.join(',')}`, 'Validation')
             )
         }
 
         let availablePackages = {}
         try {
-            availablePackages = await packagesModule.requestAvailablePackages(GET_PACKAGES_ENDPOINT, getHeaderFromApiGatewayEvent('Authorization', event))
+            availablePackages = await packagesModule.requestAvailablePackages(GET_PACKAGES_ENDPOINT, ApiGatewayHeaderInstance.get(event, 'Authorization'))
         } catch (err) {
-            return handleBackendException(err)
+            return ResponseHandlerInstance.handleBackendException(err)
         }
 
         const packages = packagesModule.mapPackageIds(availablePackages, params.packages)
 
         if (!packagesModule.validate(packages, params.packages)) {
-            return getResponseObject(
+            return ResponseHandlerInstance.getResponseObject(
                 400,
                 headers,
-                getErrorResponseBody(`Some Package(s) not supported for you partner or total price of all packages is 0`, 'Validation')
+                ResponseHandlerInstance.getErrorResponseBody(`Some Package(s) not supported for you partner or total price of all packages is 0`, 'Validation')
             )
         }
 
         const paymentMethodHandler = paymentMethodHandlerMap[params.paymentMethod]
 
         const providerPaymentIntent = await paymentMethodHandler(packages, params.returnUrl, params.ticketId, params.providerPaymentId)
-        log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
+        LoggerInstance.log(`Created providerPaymentIntent with id ${providerPaymentIntent.id} and provider ${providerPaymentIntent.provider}`)
 
         const payment = await paymentModule.create(providerPaymentIntent, params.customerId, params.ticketId)
-        log(`Created payment with id ${payment.id}`)
+        LoggerInstance.log(`Created payment with id ${payment.id}`)
 
         return paymentModule.store(DYNAMODB_TABLE, payment)
             .then(async () => {
                 const data = await snsModule.publish(SNS_TOPIC_ARN, payment)
-                log(`Published created payment to SNS: TicketId: ${payment.ticketId} / PaymentId: ${payment.id}`)
+                LoggerInstance.log(`Published created payment to SNS: TicketId: ${payment.ticketId} / PaymentId: ${payment.id}`)
             })
-            .then(() => getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
+            .then(() => ResponseHandlerInstance.getResponseObject(201, headers, createResponseData(providerPaymentIntent, payment)))
 
     } catch (err) {
-        logException(err)
-        return getResponseObject(500, headers, getErrorResponseBody('Unexpected error occurred: ' + err.message, 'Internal'))
-    } finally {
-        await Sentry.flush(2000)
+        return ResponseHandlerInstance.getResponseObject(500, headers, ResponseHandlerInstance.getErrorResponseBody('Unexpected error occurred: ' + err.message, 'Internal'))
     }
+}
+
+module.exports = async event => {
+    return RuntimeInstance.execute(handler, event);
 }

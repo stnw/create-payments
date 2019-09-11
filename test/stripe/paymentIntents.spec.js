@@ -1,8 +1,8 @@
 const assert = require('assert')
 const proxyquire = require('proxyquire')
 const paymentIntents = proxyquire('../../stripe/paymentIntents', {
-    '@mineko-io/lambda-basics': {
-        getSSMParameterValue: name => new Promise((resolve, reject) => resolve(name + 'Resolved'))
+    '@mineko/lambda-core': {
+        SSMParameterInstance: {getValue: name => new Promise((resolve, reject) => resolve(name + 'Resolved'))}
     }
 })
 
