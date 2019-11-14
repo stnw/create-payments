@@ -22,6 +22,7 @@ const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const paypalModule = require('../paypal')
 const invoiceModule = require('../invoice')
+const prepayModule = require('../prepay')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
 const snsModule = require('../sns')
@@ -72,7 +73,7 @@ const createInvoiceOrder = paymentMethod => packages =>
         )
 
 const createPrepayOrder = paymentMethod => packages =>
-    invoiceModule.create(
+    prepayModule.create(
             paymentMethod,
             packages
         )
