@@ -71,6 +71,12 @@ const createInvoiceOrder = paymentMethod => packages =>
             packages
         )
 
+const createPrepayOrder = paymentMethod => packages =>
+    invoiceModule.create(
+            paymentMethod,
+            packages
+        )
+
 const createResponseData = (providerPaymentIntent, payment) => {
     let data = {
         payment
@@ -92,6 +98,7 @@ const paymentMethodHandlerMap = {
     'sepa': createStripeSource('sepa_debit'),
     'sofort': createStripeSource('sofort'),
     'invoice': createInvoiceOrder('invoice'),
+    'prepay': createPrepayOrder('prepay'),
 }
 
 const handler = async event => {
