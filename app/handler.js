@@ -22,6 +22,7 @@ const paymentModule = require('../payment')
 const stripeModule = require('../stripe')
 const paypalModule = require('../paypal')
 const invoiceModule = require('../invoice')
+const prepayModule = require('../prepay')
 const packagesModule = require('../packages')
 const returnUrlModule = require('../returnUrl')
 const snsModule = require('../sns')
@@ -71,6 +72,12 @@ const createInvoiceOrder = paymentMethod => packages =>
             packages
         )
 
+const createPrepayOrder = paymentMethod => packages =>
+    prepayModule.create(
+            paymentMethod,
+            packages
+        )
+
 const createResponseData = (providerPaymentIntent, payment) => {
     let data = {
         payment
@@ -92,6 +99,7 @@ const paymentMethodHandlerMap = {
     'sepa': createStripeSource('sepa_debit'),
     'sofort': createStripeSource('sofort'),
     'invoice': createInvoiceOrder('invoice'),
+    'prepay': createPrepayOrder('prepay'),
 }
 
 const handler = async event => {
